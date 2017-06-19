@@ -41,6 +41,7 @@ set(SRCS
   Exotica/NOmega/AliAnalysisTaskNOmegaLPK.cxx
   Exotica/NOmega/AliAnalysisTaskOmegaOmegaOX.cxx
   Exotica/NOmega/AliAnalysisTaskNOmegaLX.cxx
+  Exotica/Ps/AliAnalysisTaskPsEfficiency.cxx
   Hypernuclei/Hyp2Body/AliAnalysisTaskHelium3Pi.cxx
   Hypernuclei/Hyp2Body/AliAnalysisTaskHelium3PiAOD.cxx
   Hypernuclei/Hyp2Body/AliAnalysisTaskHelium3PiMC.cxx
@@ -48,6 +49,7 @@ set(SRCS
   Hypernuclei/Hyp2Body/AliReducedHypTritEvent.cxx
   Hypernuclei/Hyp2Body/AliAnalysisTaskHypCrossCheck.cxx
   Hypernuclei/Hyp3Body/AliAnalysisTaskHypertriton3.cxx
+  Hypernuclei/Hyp3Body/AliAnalysisTaskHypertriton3Dev.cxx
   Hypernuclei/Hyp3Body/AliAnalysisTaskHypertriton3AOD.cxx
   Nuclei/DeltaMasses/AliAnalysisNucleiMass.cxx
   Nuclei/DeltaMasses/AliAnalysisNuclMult.cxx
@@ -65,6 +67,8 @@ set(SRCS
   Nuclei/Nucleipp/AliLnID.cxx
   Nuclei/v2/AliAnalysisTaskNucleiv2.cxx
   Nuclei/v2/AliAnalysisTaskNucleiv2SP.cxx
+  Nuclei/v2/AliAnalysisTaskNucleiv2pPb.cxx
+  Nuclei/v2/AliAnalysisTaskAllPtcv2.cxx
   Nuclei/NucleiKine/AliAnalysisTaskNucleiKine.cxx
   Utils/NuclexFilter/AliAODMCNuclExReplicator.cxx
   Utils/NuclexFilter/AliAODNuclExReplicator.cxx

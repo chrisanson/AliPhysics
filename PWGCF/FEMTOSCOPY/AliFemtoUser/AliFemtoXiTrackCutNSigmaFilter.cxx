@@ -169,6 +169,9 @@ bool AliFemtoXiTrackCutNSigmaFilter::Pass(const AliFemtoXi* aXi)
     if(aXi->DecayLengthXi()>fMaxDecayLengthXi)
       return false;
     
+    //fiducial volume radius
+    if(aXi->RadiusXi()<fRadiusXiMin || aXi->RadiusXi()>fRadiusXiMax)
+      return false;
  
   if(fParticleTypeXi == kAll)
     return true;
@@ -259,6 +262,7 @@ void AliFemtoXiTrackCutNSigmaFilter::UpdateDaughterV0Filter()
   fDaughterV0Filter->SetPtPosDaughter(fPtMinPosDaughter,fPtMaxPosDaughter);
   fDaughterV0Filter->SetPtNegDaughter(fPtMinNegDaughter,fPtMaxNegDaughter);
   fDaughterV0Filter->SetOnFlyStatus(fOnFlyStatus);
+  fDaughterV0Filter->SetIgnoreOnFlyStatus(fIgnoreOnFlyStatus);
   fDaughterV0Filter->SetMinAvgSeparation(fMinAvgSepDaughters);
 
   fDaughterV0Filter->SetRadiusV0Min(fRadiusV0Min);

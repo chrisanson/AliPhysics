@@ -175,6 +175,7 @@ AliConversionPhotonCuts::AliConversionPhotonCuts(const char *name,const char *ti
   fConversionPointYArray(0.0),
   fConversionPointZArray(0.0),
   fCutString(NULL),
+  fCutStringRead(""),
   fIsHeavyIon(0),
   fUseITSpid(kFALSE),
   fITSPIDnSigmaAboveElectronLine(100),
@@ -308,6 +309,7 @@ AliConversionPhotonCuts::AliConversionPhotonCuts(const AliConversionPhotonCuts &
   fConversionPointYArray(ref.fConversionPointYArray),
   fConversionPointZArray(ref.fConversionPointZArray),
   fCutString(NULL),
+  fCutStringRead(""),
   fIsHeavyIon(ref.fIsHeavyIon),
   fUseITSpid(ref.fUseITSpid),
   fITSPIDnSigmaAboveElectronLine(ref.fITSPIDnSigmaAboveElectronLine),
@@ -1337,7 +1339,7 @@ Bool_t AliConversionPhotonCuts::dEdxCuts(AliVTrack *fCurrentTrack){
   //    }
   // }
 
-  if((fCurrentTrack->GetStatus() & AliESDtrack::kTOFpid) && !(fCurrentTrack->GetStatus() & AliESDtrack::kTOFmismatch)){
+  if((fCurrentTrack->GetStatus() & AliESDtrack::kTOFpid )==0 && !(fCurrentTrack->GetStatus() & AliESDtrack::kTOFmismatch)){
     if(fHistoTOFbefore){
       Double_t t0 = fPIDResponse->GetTOFResponse().GetStartTime(fCurrentTrack->P());
       Double_t  times[AliPID::kSPECIESC];
@@ -1358,7 +1360,7 @@ Bool_t AliConversionPhotonCuts::dEdxCuts(AliVTrack *fCurrentTrack){
   }
   cutIndex++;
   
-  if((fCurrentTrack->GetStatus() & AliESDtrack::kITSpid)){
+  if((fCurrentTrack->GetStatus() & AliESDtrack::kITSpid)==0){
     if(fHistoITSSigbefore) fHistoITSSigbefore->Fill(fCurrentTrack->P(),fPIDResponse->NumberOfSigmasITS(fCurrentTrack, AliPID::kElectron));
     if(fUseITSpid){
       if(fCurrentTrack->Pt()<=fMaxPtPIDITS){
@@ -1604,19 +1606,23 @@ Bool_t AliConversionPhotonCuts::UpdateCutString() {
 
 ///________________________________________________________________________
 Bool_t AliConversionPhotonCuts::InitializeCutsFromCutString(const TString analysisCutSelection ) {
+  fCutStringRead = Form("%s",analysisCutSelection.Data());
+  
   // Initialize Cuts from a given Cut string
   AliInfo(Form("Set Photoncut Number: %s",analysisCutSelection.Data()));
   if(analysisCutSelection.Length()!=kNCuts) {
     AliError(Form("Cut selection has the wrong length! size is %d, number of cuts is %d", analysisCutSelection.Length(), kNCuts));
     return kFALSE;
   }
-  if(!analysisCutSelection.IsDigit()){
-    AliError("Cut selection contains characters");
+  if(!analysisCutSelection.IsAlnum()){
+    AliError("Cut selection is not alphanumeric");
     return kFALSE;
   }
 
-  const char *cutSelection = analysisCutSelection.Data();
-  #define ASSIGNARRAY(i)  fCuts[i] = cutSelection[i] - '0'
+  TString analysisCutSelectionLowerCase = Form("%s",analysisCutSelection.Data());
+  analysisCutSelectionLowerCase.ToLower();
+  const char *cutSelection = analysisCutSelectionLowerCase.Data();
+  #define ASSIGNARRAY(i)  fCuts[i] = ((int)cutSelection[i]>=(int)'a') ? cutSelection[i]-'a'+10 : cutSelection[i]-'0'
   for(Int_t ii=0;ii<kNCuts;ii++){
     ASSIGNARRAY(ii);
   }
@@ -2027,6 +2033,18 @@ Bool_t AliConversionPhotonCuts::SetEtaCut(Int_t etaCut){   // Set Cut
     fEtaCutMin     = -0.1;
     fLineCutZRSlopeMin = 0.;
     break;
+  case 10: // 0.2-0.9
+    fEtaCut     = 0.9;
+    fLineCutZRSlope = tan(2*atan(exp(-fEtaCut)));
+    fEtaCutMin     = 0.2;
+    fLineCutZRSlopeMin = 0.;
+    break;
+  case 11: // 0.2-0.9
+    fEtaCut     = 0.9;
+    fLineCutZRSlope = tan(2*atan(exp(-fEtaCut)));
+    fEtaCutMin     = 0.2;
+    fLineCutZRSlopeMin = tan(2*atan(exp(-fEtaCutMin)));
+    break;
   default:
     AliError(Form(" EtaCut not defined %d",etaCut));
     return kFALSE;
@@ -2149,7 +2167,10 @@ Bool_t AliConversionPhotonCuts::SetMinPhiSectorCut(Int_t minPhiCut) {
     if (!fDoShrinkTPCAcceptance) fDoShrinkTPCAcceptance = kTRUE;
     fMinPhiCut = 2.4; //OROC C08 tightest cut
     break;
-    
+  case 8:
+    if (!fDoShrinkTPCAcceptance) fDoShrinkTPCAcceptance = kTRUE;
+    fMinPhiCut = 4.54; //PHOS phi
+    break;
   default:
     AliError(Form("MinPhiCut not defined %d",minPhiCut));
     return kFALSE;
@@ -2195,7 +2216,10 @@ Bool_t AliConversionPhotonCuts::SetMaxPhiSectorCut(Int_t maxPhiCut) {
     if (!fDoShrinkTPCAcceptance) fDoShrinkTPCAcceptance = kTRUE;
     fMaxPhiCut = 3.6; //OROC C08 tighest cut
     break;
-    
+  case 8:
+    if (!fDoShrinkTPCAcceptance) fDoShrinkTPCAcceptance = kTRUE;
+    fMaxPhiCut = 5.59; //PHOS phi
+    break;
   default:
     AliError(Form("MaxPhiCut not defined %d",maxPhiCut));
     return kFALSE;
@@ -3294,11 +3318,7 @@ Bool_t AliConversionPhotonCuts::PsiPairCut(const AliConversionPhotonBase * photo
 ///________________________________________________________________________
 TString AliConversionPhotonCuts::GetCutNumber(){
   // returns TString with current cut number
-  TString a(kNCuts);
-  for(Int_t ii=0;ii<kNCuts;ii++){
-    a.Append(Form("%d",fCuts[ii]));
-  }
-  return a;
+  return fCutStringRead;
 }
 
 ///________________________________________________________________________

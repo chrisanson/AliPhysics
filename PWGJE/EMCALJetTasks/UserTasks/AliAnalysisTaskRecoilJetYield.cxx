@@ -117,6 +117,21 @@ AliAnalysisTaskRecoilJetYield::AliAnalysisTaskRecoilJetYield() :
   fhPhiTriggerHadronEventPlaneTPC(0x0),
   fhDetJetPt_Incl(0x0),
   fhDetJetPt_Matched(0x0),
+  fhJetPt_Det(0x0),
+  fhJetPt_True(0x0),
+  fhJetPhi_Det(0x0),
+  fhJetPhi_True(0x0),
+  fhJetEta_Det(0x0),
+  fhJetEta_True(0x0),
+  fhJetMass_Det(0x0),
+  fhJetMass_True(0x0),
+  fhJetRadius_Det(0x0),
+  fhJetRadius_True(0x0),
+  fhJetCounter_Det(0x0),
+  fhJetCounter_True(0x0),
+  fhNumberOfJetTracks_Det(0x0),
+  fhNumberOfJetTracks_True(0x0),
+  fh2PtRatio(0x0), 
   fReclusterAlgo(0),
   fSubMatching(kFALSE)
 
@@ -181,6 +196,21 @@ AliAnalysisTaskRecoilJetYield::AliAnalysisTaskRecoilJetYield(const char *name) :
   fhPhiTriggerHadronEventPlaneTPC(0x0),
   fhDetJetPt_Incl(0x0),
   fhDetJetPt_Matched(0x0),
+  fhJetPt_Det(0x0),
+  fhJetPt_True(0x0),
+  fhJetPhi_Det(0x0),
+  fhJetPhi_True(0x0),
+  fhJetEta_Det(0x0),
+  fhJetEta_True(0x0),
+  fhJetMass_Det(0x0),
+  fhJetMass_True(0x0),
+  fhJetRadius_Det(0x0),
+  fhJetRadius_True(0x0),
+  fhJetCounter_Det(0x0),
+  fhJetCounter_True(0x0),
+  fhNumberOfJetTracks_Det(0x0),
+  fhNumberOfJetTracks_True(0x0),
+  fh2PtRatio(0x0), 
   fReclusterAlgo(0),
   fSubMatching(kFALSE)
   
@@ -939,8 +969,8 @@ Double_t AliAnalysisTaskRecoilJetYield::PTD(AliEmcalJet *Jet, Int_t JetContNb){
   SymParam=(finaljet.structure_of<fastjet::contrib::SoftDrop>().symmetry());
   Mu=(finaljet.structure_of<fastjet::contrib::SoftDrop>().mu());
   DeltaR=(finaljet.structure_of<fastjet::contrib::SoftDrop>().delta_R());
-  fhGroomedPtvJetPt->Fill(finaljet.perp(),fJet->Pt());
-  fhDroppedBranches->Fill(finaljet.structure_of<fastjet::contrib::SoftDrop>().dropped_count());
+  //fhGroomedPtvJetPt->Fill(finaljet.perp(),fJet->Pt());
+  //fhDroppedBranches->Fill(finaljet.structure_of<fastjet::contrib::SoftDrop>().dropped_count());
   if(!fTruthJet) fJetInfoVar[2]=SymParam;
   else fJetInfoVar[3]=SymParam;
   if(!fTruthJet) fJetInfoVar[12] = DeltaR;
@@ -949,7 +979,7 @@ Double_t AliAnalysisTaskRecoilJetYield::PTD(AliEmcalJet *Jet, Int_t JetContNb){
   else fJetInfoVar[15]=finaljet.structure_of<fastjet::contrib::SoftDrop>().dropped_count();
   if(!(fJetShapeSub==kConstSub)){
     if(!fTruthJet) fJetInfoVar[16]=(finaljet.perp()-(GetRhoVal(0)*fJet->Area()));
-    else fJetInfoVar[17]=(finaljet.perp()-(GetRhoVal(0)*fJet->Area()));
+    else fJetInfoVar[17]=finaljet.perp();
   }
   else{
     if(!fTruthJet) fJetInfoVar[16]=(finaljet.perp());

@@ -17,7 +17,7 @@ static const double PionMass = 0.13957018,
 		    XiMass     = 1.32171;
 
 //____________________________
-const char* const AliFemtoAnalysisLambdaKaon::fAnalysisTags[] = {"LamK0", "ALamK0", "LamKchP", "ALamKchP", "LamKchM", "ALamKchM", "LamLam", "ALamALam", "LamALam", "LamPiP", "ALamPiP", "LamPiM", "ALamPiM", "XiKchP", "AXiKchP", "XiKchM", "AXiKchM", "ProtPiM", "AProtPiP", "PiPPiM"};
+const char* const AliFemtoAnalysisLambdaKaon::fAnalysisTags[] = {"LamK0", "ALamK0", "LamKchP", "ALamKchP", "LamKchM", "ALamKchM", "LamLam", "ALamALam", "LamALam", "LamPiP", "ALamPiP", "LamPiM", "ALamPiM", "XiKchP", "AXiKchP", "XiKchM", "AXiKchM", "XiK0", "AXiK0", "ProtPiM", "AProtPiP", "PiPPiM"};
 
 
 
@@ -239,6 +239,26 @@ AliFemtoAnalysisLambdaKaon::AliFemtoAnalysisLambdaKaon(AnalysisParams &aAnParams
   {
     AliFemtoEventCutEstimators* tEvCutEst = CreateEventCutEstimators(aEvCutParams);
     SetAnalysis(tEvCutEst,tXiCut1,tESDCut2,tXiTrackPairCut);
+  }
+}
+
+//___________________________________________________________________
+AliFemtoAnalysisLambdaKaon::AliFemtoAnalysisLambdaKaon(AnalysisParams &aAnParams, EventCutParams &aEvCutParams, PairCutParams &aPairCutParams, XiCutParams &aXiCutParams1, V0CutParams &aV0CutParams1, TString aDirNameModifier) :
+  AliFemtoAnalysisLambdaKaon::AliFemtoAnalysisLambdaKaon(aAnParams,aEvCutParams,aDirNameModifier)
+{
+  AliFemtoXiTrackCutNSigmaFilter* tXiCut1 = CreateXiCut(aXiCutParams1);
+  AliFemtoV0TrackCutNSigmaFilter* tV0Cut1 = CreateV0Cut(aV0CutParams1);
+  AliFemtoXiV0PairCut* tXiV0PairCut = CreateXiV0PairCut(aPairCutParams);
+
+  if(aAnParams.isMBAnalysis)
+  {
+    AliFemtoBasicEventCut* tBasicEvCut = CreateBasicEventCut(aEvCutParams);
+    SetAnalysis(tBasicEvCut,tXiCut1,tV0Cut1,tXiV0PairCut);
+  }
+  else
+  {
+    AliFemtoEventCutEstimators* tEvCutEst = CreateEventCutEstimators(aEvCutParams);
+    SetAnalysis(tEvCutEst,tXiCut1,tV0Cut1,tXiV0PairCut);
   }
 }
 
@@ -511,6 +531,18 @@ void AliFemtoAnalysisLambdaKaon::SetParticleTypes(AliFemtoAnalysisLambdaKaon::An
     fParticlePDGType2 = AliFemtoAnalysisLambdaKaon::kPDGKchM;
     break;
 
+  case AliFemtoAnalysisLambdaKaon::kXiK0:
+    fGeneralAnalysisType = AliFemtoAnalysisLambdaKaon::kXiV0;
+    fParticlePDGType1 = AliFemtoAnalysisLambdaKaon::kPDGXiC;
+    fParticlePDGType2 = AliFemtoAnalysisLambdaKaon::kPDGK0;
+    break;
+
+  case AliFemtoAnalysisLambdaKaon::kAXiK0:
+    fGeneralAnalysisType = AliFemtoAnalysisLambdaKaon::kXiV0;
+    fParticlePDGType1 = AliFemtoAnalysisLambdaKaon::kPDGAXiC;
+    fParticlePDGType2 = AliFemtoAnalysisLambdaKaon::kPDGK0;
+    break;
+
   case AliFemtoAnalysisLambdaKaon::kProtPiM:
     fGeneralAnalysisType = AliFemtoAnalysisLambdaKaon::kTrackTrack;
     fParticlePDGType1 = AliFemtoAnalysisLambdaKaon::kPDGProt;
@@ -548,6 +580,11 @@ void AliFemtoAnalysisLambdaKaon::SetParticleTypes(AliFemtoAnalysisLambdaKaon::An
   case AliFemtoAnalysisLambdaKaon::kXiTrack:
     fGeneralParticleType1 = AliFemtoAnalysisLambdaKaon::kCascade;
     fGeneralParticleType2 = AliFemtoAnalysisLambdaKaon::kTrack;
+    break;
+
+  case AliFemtoAnalysisLambdaKaon::kXiV0:
+    fGeneralParticleType1 = AliFemtoAnalysisLambdaKaon::kCascade;
+    fGeneralParticleType2 = AliFemtoAnalysisLambdaKaon::kV0;
     break;
 
   case AliFemtoAnalysisLambdaKaon::kTrackTrack:
@@ -727,7 +764,9 @@ AliFemtoV0TrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateV0Cut(V0CutPar
   tV0Cut->SetParticleType(aCutParams.v0Type);
   tV0Cut->SetCTauHistoV0();
   tV0Cut->SetMass(aCutParams.mass);
-  tV0Cut->SetInvariantMassLambda(aCutParams.minInvariantMass,aCutParams.maxInvariantMass);
+  if(aCutParams.particlePDGType==kPDGLam || aCutParams.particlePDGType==kPDGALam) tV0Cut->SetInvariantMassLambda(aCutParams.minInvariantMass,aCutParams.maxInvariantMass);
+  else if(aCutParams.particlePDGType==kPDGK0) tV0Cut->SetInvariantMassK0s(aCutParams.minInvariantMass,aCutParams.maxInvariantMass);
+  
   tV0Cut->SetLooseInvMassCut(aCutParams.useLooseInvMassCut, aCutParams.minLooseInvMass, aCutParams.maxLooseInvMass);
 
   tV0Cut->SetEta(aCutParams.eta);
@@ -746,6 +785,11 @@ AliFemtoV0TrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateV0Cut(V0CutPar
   if(fAnalysisType==kProtPiM || fAnalysisType==kAProtPiP || fAnalysisType==kPiPPiM) tV0Cut->SetStatusDaughters(AliESDtrack::kTPCpid);  //TODO currently a work around
   tV0Cut->SetMaxDcaV0Daughters(aCutParams.maxDcaV0Daughters);
   tV0Cut->SetMinDaughtersToPrimVertex(aCutParams.minPosDaughterToPrimVertex,aCutParams.minNegDaughterToPrimVertex);
+
+  tV0Cut->SetRadiusV0Min(aCutParams.radiusV0Min);
+  tV0Cut->SetRadiusV0Max(aCutParams.radiusV0Max);
+
+  tV0Cut->SetIgnoreOnFlyStatus(aCutParams.ignoreOnFlyStatus);
 
   if(aCutParams.useCustomFilter) AddCustomV0SelectionFilters(aCutParams.particlePDGType,tV0Cut);
 
@@ -1041,6 +1085,8 @@ AliFemtoXiTrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateXiCut(XiCutPar
   tXiCut->SetMinCosPointingAngleXi(aCutParams.minCosPointingAngleXi);
   tXiCut->SetMinCosPointingAngleV0toXi(aCutParams.minCosPointingAngleV0toXi);
   tXiCut->SetMaxDcaXi(aCutParams.maxDcaXi);
+  tXiCut->SetRadiusXiMin(aCutParams.radiusXiMin);
+  tXiCut->SetRadiusXiMax(aCutParams.radiusXiMax);
     //XiDaughters
     tXiCut->SetMaxDcaXiDaughters(aCutParams.maxDcaXiDaughters);
 
@@ -1052,7 +1098,6 @@ AliFemtoXiTrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateXiCut(XiCutPar
   tXiCut->SetPtBac(aCutParams.minPtBac,aCutParams.maxPtBac);
   tXiCut->SetStatusBac(AliESDtrack::kTPCrefit);  //yes or no?
 
-
   //Lambda cuts (regular V0)
   tXiCut->SetParticleType(aCutParams.v0Type); //0=lambda
   tXiCut->SetCTauHistoV0();
@@ -1062,6 +1107,7 @@ AliFemtoXiTrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateXiCut(XiCutPar
   tXiCut->SetEta(aCutParams.etaV0);
   tXiCut->SetPt(aCutParams.minPtV0,aCutParams.maxPtV0);
   tXiCut->SetOnFlyStatus(aCutParams.onFlyStatusV0);
+  tXiCut->SetIgnoreOnFlyStatus(aCutParams.ignoreOnFlyStatusV0);
   tXiCut->SetMaxV0DecayLength(aCutParams.maxV0DecayLength);
     //Lambda daughter cuts
     tXiCut->SetMinDaughtersToPrimVertex(aCutParams.minV0PosDaughterToPrimVertex,aCutParams.minV0NegDaughterToPrimVertex);
@@ -1069,6 +1115,8 @@ AliFemtoXiTrackCutNSigmaFilter* AliFemtoAnalysisLambdaKaon::CreateXiCut(XiCutPar
     tXiCut->SetEtaDaughters(aCutParams.etaV0Daughters);
     tXiCut->SetPtPosDaughter(aCutParams.minPtPosV0Daughter,aCutParams.maxPtPosV0Daughter); //0.5 for protons
     tXiCut->SetPtNegDaughter(aCutParams.minPtNegV0Daughter,aCutParams.maxPtNegV0Daughter); //0.16 for pions
+    tXiCut->SetRadiusV0Min(aCutParams.radiusV0Min);
+    tXiCut->SetRadiusV0Max(aCutParams.radiusV0Max);
     tXiCut->SetTPCnclsDaughters(aCutParams.minTPCnclsV0Daughters);
     tXiCut->SetStatusDaughters(AliESDtrack::kTPCrefit);  //yes or no?
 
@@ -1215,13 +1263,27 @@ AliFemtoXiTrackPairCut* AliFemtoAnalysisLambdaKaon::CreateXiTrackPairCut(PairCut
     case AliFemtoAnalysisLambdaKaon::kAXiKchP:
       tTrackPos = aPairCutParams.minAvgSepTrackPos;
       tTrackNeg = aPairCutParams.minAvgSepTrackNeg;
-      tTrackBac = aPairCutParams.minAvgSepTrackBacPion;
       break;
 
     case AliFemtoAnalysisLambdaKaon::kXiKchM:
     case AliFemtoAnalysisLambdaKaon::kAXiKchM:
       tTrackPos = aPairCutParams.minAvgSepTrackNeg;
       tTrackNeg = aPairCutParams.minAvgSepTrackPos;
+      break;
+
+    default:
+      break;
+    }
+
+    //XiKchP and AXiKchM don't need TrackBacPion cuts bc of unlike charges of Bac Pion and Kch
+    switch(fAnalysisType) {
+    case AliFemtoAnalysisLambdaKaon::kXiKchP:
+    case AliFemtoAnalysisLambdaKaon::kAXiKchM:
+      tTrackBac = 0.0;
+      break;
+
+    case AliFemtoAnalysisLambdaKaon::kXiKchM:
+    case AliFemtoAnalysisLambdaKaon::kAXiKchP:
       tTrackBac = aPairCutParams.minAvgSepTrackBacPion;
       break;
 
@@ -1239,8 +1301,52 @@ AliFemtoXiTrackPairCut* AliFemtoAnalysisLambdaKaon::CreateXiTrackPairCut(PairCut
 }
 
 
+//___________________________________________________________________
+AliFemtoXiV0PairCut* AliFemtoAnalysisLambdaKaon::CreateXiV0PairCut(PairCutParams &aPairCutParams)
+{
+  AliFemtoXiV0PairCut *tXiV0PairCut = new AliFemtoXiV0PairCut();
+  double tPosPos=0., tNegPos=0., tBacPos=0.;
+  double tPosNeg=0., tNegNeg=0., tBacNeg=0.;
 
+  if(fImplementAvgSepCuts)
+  {
+    switch(fAnalysisType) {
+    case AliFemtoAnalysisLambdaKaon::kXiK0:
+      tPosPos = aPairCutParams.minAvgSepPosPos; //p(Lam(Xi))-pi+(K0)
+      tNegPos = aPairCutParams.minAvgSepNegPos; //pi-(Lam(Xi))-pi+(K0)
+      tBacPos = aPairCutParams.minAvgSepBacPos; //pi-(Xi)-pi+(K0)
 
+      tPosNeg = aPairCutParams.minAvgSepPosNeg; //p(Lam(Xi))-pi-(K0)
+      tNegNeg = aPairCutParams.minAvgSepNegNeg; //pi-(Lam(Xi))-pi-(K0)
+      tBacNeg = aPairCutParams.minAvgSepBacNeg; //pi-(Xi)-pi-(K0)
+      break;
+
+    case AliFemtoAnalysisLambdaKaon::kAXiK0:
+      tPosPos = aPairCutParams.minAvgSepNegNeg; //pi+(ALam(AXi))-pi+(K0)
+      tNegPos = aPairCutParams.minAvgSepPosNeg; //pbar(ALam(AXi))-pi+(K0)
+      tBacPos = aPairCutParams.minAvgSepBacNeg; //pi+(AXi)-pi+(K0)
+
+      tPosNeg = aPairCutParams.minAvgSepNegPos; //pi+(ALam(AXi))-pi-(K0)
+      tNegNeg = aPairCutParams.minAvgSepPosPos; //pbar(ALam(AXi))-pi-(K0)
+      tBacNeg = aPairCutParams.minAvgSepBacPos; //pi+(AXi)-pi-(K0)
+      break;
+
+    default:
+      break;
+    }
+
+  }
+
+  tXiV0PairCut->SetMinAvgSepBacPos(tBacPos);
+  tXiV0PairCut->SetMinAvgSepBacNeg(tBacNeg);
+
+  tXiV0PairCut->GetV0PairCut()->SetMinAvgSeparation(0,tPosPos);
+  tXiV0PairCut->GetV0PairCut()->SetMinAvgSeparation(1,tPosNeg);
+  tXiV0PairCut->GetV0PairCut()->SetMinAvgSeparation(2,tNegPos);
+  tXiV0PairCut->GetV0PairCut()->SetMinAvgSeparation(3,tNegNeg);
+
+  return tXiV0PairCut;
+}
 
 
 //___________________________________________________________________
@@ -1272,6 +1378,10 @@ AliFemtoAvgSepCorrFctn* AliFemtoAnalysisLambdaKaon::CreateAvgSepCorrFctn(const c
     cf->SetPairType(AliFemtoAvgSepCorrFctn::kTrackXi);
     break;
 
+  case AliFemtoAnalysisLambdaKaon::kXiV0:
+    cf->SetPairType(AliFemtoAvgSepCorrFctn::kXiV0);
+    break;
+
   case AliFemtoAnalysisLambdaKaon::kTrackTrack:
     cf->SetPairType(AliFemtoAvgSepCorrFctn::kTracks);
     break;
@@ -1286,7 +1396,7 @@ AliFemtoAvgSepCorrFctn* AliFemtoAnalysisLambdaKaon::CreateAvgSepCorrFctn(const c
 //___________________________________________________________________
 AliFemtoModelCorrFctnKStarFull* AliFemtoAnalysisLambdaKaon::CreateModelCorrFctnKStarFull(const char* name, unsigned int bins, double min, double max)
 {
-  bool tUseWeightGenerator = true;
+  bool tUseWeightGenerator = fAnalysisParams.useMCWeightGenerator;
 
   AliFemtoModelCorrFctnKStarFull *cf = new AliFemtoModelCorrFctnKStarFull(TString::Format("KStarModelCf_%s",name),bins,min,max);
     cf->SetRemoveMisidentified(fAnalysisParams.removeMisidentifiedMCParticles);
@@ -1511,6 +1621,14 @@ void AliFemtoAnalysisLambdaKaon::AddCutMonitors(AliFemtoEventCut* aEventCut, Ali
     }
     break;
 
+  case AliFemtoAnalysisLambdaKaon::kXiV0:
+    aPartCut1->AddCutMonitorPass(new AliFemtoCutMonitorXi(tNamePass1));
+    if(!fAnalysisParams.monitorPart1CutPassOnly) aPartCut1->AddCutMonitorFail(new AliFemtoCutMonitorXi(tNameFail1));
+
+    aPartCut2->AddCutMonitorPass(new AliFemtoCutMonitorV0(tNamePass2));
+    if(!fAnalysisParams.monitorPart2CutPassOnly) aPartCut2->AddCutMonitorFail(new AliFemtoCutMonitorV0(tNameFail2));
+    break;
+
   case AliFemtoAnalysisLambdaKaon::kTrackTrack:
     aPartCut1->AddCutMonitorPass(new AliFemtoCutMonitorParticleYPt(tNamePass1,tPartMass1));
     aPartCut1->AddCutMonitorPass(new AliFemtoCutMonitorParticlePID(tNamePass1,tPartType1));
@@ -1607,6 +1725,7 @@ AliFemtoAnalysisLambdaKaon::DefaultAnalysisParams()
   tReturnParams.monitorPart1CutPassOnly = false;
   tReturnParams.monitorPart2CutPassOnly = false;
   tReturnParams.monitorPairCutPassOnly = false;
+  tReturnParams.useMCWeightGenerator = false;
 
   return tReturnParams;
 }
@@ -1683,6 +1802,11 @@ AliFemtoAnalysisLambdaKaon::DefaultLambdaCutParams()
   tReturnParams.minPosDaughterToPrimVertex = 0.1;
   tReturnParams.minNegDaughterToPrimVertex = 0.3;
 
+  tReturnParams.radiusV0Min = 0.0;     //for now, these are default, wide open values
+  tReturnParams.radiusV0Max = 99999.0;
+
+  tReturnParams.ignoreOnFlyStatus = false;
+
   return tReturnParams;
 }
 
@@ -1737,6 +1861,11 @@ AliFemtoAnalysisLambdaKaon::DefaultAntiLambdaCutParams()
   tReturnParams.minPosDaughterToPrimVertex = 0.3;
   tReturnParams.minNegDaughterToPrimVertex = 0.1;
 
+  tReturnParams.radiusV0Min = 0.0;     //for now, these are default, wide open values
+  tReturnParams.radiusV0Max = 99999.0;
+
+  tReturnParams.ignoreOnFlyStatus = false;
+
   return tReturnParams;
 }
 
@@ -1790,6 +1919,11 @@ AliFemtoAnalysisLambdaKaon::DefaultK0ShortCutParams()
   tReturnParams.maxDcaV0Daughters = 0.3;
   tReturnParams.minPosDaughterToPrimVertex = 0.3;
   tReturnParams.minNegDaughterToPrimVertex = 0.3;
+
+  tReturnParams.radiusV0Min = 0.0;     //for now, these are default, wide open values
+  tReturnParams.radiusV0Max = 99999.0;
+
+  tReturnParams.ignoreOnFlyStatus = false;
 
   return tReturnParams;
 }
@@ -1909,17 +2043,20 @@ AliFemtoAnalysisLambdaKaon::DefaultXiCutParams()
   tReturnParams.maxDecayLengthXi = 100.;
   tReturnParams.minCosPointingAngleXi = 0.9992;
   tReturnParams.minCosPointingAngleV0toXi = 0.9993;
-  tReturnParams.maxDcaXi = 100.;
+  tReturnParams.maxDcaXi = 0.3;
   tReturnParams.maxDcaXiDaughters = 0.3;
 
-  tReturnParams.minDcaXiBac = 0.03;
+  tReturnParams.minDcaXiBac = 0.1;
   tReturnParams.etaBac = 0.8;
   tReturnParams.minTPCnclsBac = 70;
   tReturnParams.minPtBac = 0.;
   tReturnParams.maxPtBac = 100.;
 
+  tReturnParams.radiusXiMin = 0.0;      //for now, these are default, wide open values
+  tReturnParams.radiusXiMax = 99999.0;
+
   tReturnParams.v0Type = 0;
-  tReturnParams.minDcaV0 = 0.1;
+  tReturnParams.minDcaV0 = 0.2;
   tReturnParams.minInvMassV0 = LambdaMass-0.005;
   tReturnParams.maxInvMassV0 = LambdaMass+0.005;
   tReturnParams.minCosPointingAngleV0 = 0.;  //TODO was 0.998, might need to revert back
@@ -1938,12 +2075,17 @@ AliFemtoAnalysisLambdaKaon::DefaultXiCutParams()
   tReturnParams.minPtNegV0Daughter = 0.16;
   tReturnParams.maxPtNegV0Daughter = 99.;
 
+  tReturnParams.radiusV0Min = 0.0;     //probably leave wide open values
+  tReturnParams.radiusV0Max = 99999.0;
+
   tReturnParams.minTPCnclsV0Daughters = 70;
 
   tReturnParams.useCustomV0Filter = true;
   tReturnParams.useCustomV0MisID = true;
   tReturnParams.useCustomBacPionFilter = true;
   tReturnParams.useCustomBacPionMisID = false;
+
+  tReturnParams.ignoreOnFlyStatusV0 = false;
 
   return tReturnParams;
 }
@@ -1969,17 +2111,20 @@ AliFemtoAnalysisLambdaKaon::DefaultAXiCutParams()
   tReturnParams.maxDecayLengthXi = 100.;
   tReturnParams.minCosPointingAngleXi = 0.9992;
   tReturnParams.minCosPointingAngleV0toXi = 0.9993;
-  tReturnParams.maxDcaXi = 100.;
+  tReturnParams.maxDcaXi = 0.3;
   tReturnParams.maxDcaXiDaughters = 0.3;
 
-  tReturnParams.minDcaXiBac = 0.03;
+  tReturnParams.minDcaXiBac = 0.1;
   tReturnParams.etaBac = 0.8;
   tReturnParams.minTPCnclsBac = 70;
   tReturnParams.minPtBac = 0.;
   tReturnParams.maxPtBac = 100.;
 
+  tReturnParams.radiusXiMin = 0.0;      //for now, these are default, wide open values
+  tReturnParams.radiusXiMax = 99999.0;
+
   tReturnParams.v0Type = 1;
-  tReturnParams.minDcaV0 = 0.1;
+  tReturnParams.minDcaV0 = 0.2;
   tReturnParams.minInvMassV0 = LambdaMass-0.005;
   tReturnParams.maxInvMassV0 = LambdaMass+0.005;
   tReturnParams.minCosPointingAngleV0 = 0.;  //TODO was 0.998, might need to revert back
@@ -1998,12 +2143,17 @@ AliFemtoAnalysisLambdaKaon::DefaultAXiCutParams()
   tReturnParams.minPtNegV0Daughter = 0.3;
   tReturnParams.maxPtNegV0Daughter = 99.;
 
+  tReturnParams.radiusV0Min = 0.0;     //probably leave wide open values
+  tReturnParams.radiusV0Max = 99999.0;
+
   tReturnParams.minTPCnclsV0Daughters = 70;
 
   tReturnParams.useCustomV0Filter = true;
   tReturnParams.useCustomV0MisID = true;
   tReturnParams.useCustomBacPionFilter = false;
   tReturnParams.useCustomBacPionMisID = false;
+
+  tReturnParams.ignoreOnFlyStatusV0 = false;
 
   return tReturnParams;
 }
@@ -2032,8 +2182,14 @@ AliFemtoAnalysisLambdaKaon::DefaultPairParams()
   tReturnParams.minAvgSepTrackPos = 8.;
   tReturnParams.minAvgSepTrackNeg = 0.;
 
-  //Default for XiKchP and AXiKchP, etc
-  tReturnParams.minAvgSepTrackBacPion = 0.;
+  //Default for XiKchM and AXiKchP.  XiKchP and AXiKchM are set to 0 because
+  //bachelor pion and Kch are of opposite charge
+  tReturnParams.minAvgSepTrackBacPion = 8.;
+
+
+  //Default for XiK0
+  tReturnParams.minAvgSepBacPos = 0.;
+  tReturnParams.minAvgSepBacNeg = 6.;
 
   return tReturnParams;
 }
